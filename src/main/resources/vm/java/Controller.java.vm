@@ -1,0 +1,62 @@
+package ${packageName}.controller;
+
+import ${packageName}.entity.${className}Entity;
+import ${packageName}.service.${className}Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import java.util.List;
+
+@Api(tags = "${className}")
+@RestController
+@RequestMapping("/${lowerCaseClassName}")
+public class ${className}Controller {
+
+    @Autowired
+    private ${className}Service ${lowerCaseClassName}Service;
+
+    //增加
+
+    @ApiOperation(value = "${className}新增")
+    @PostMapping("/insert")
+    public boolean add(@RequestBody ${className}Entity ${lowerCaseClassName}entity) {
+        return ${lowerCaseClassName}Service.save(${lowerCaseClassName}entity);
+    }
+
+    //通过id查询
+
+    @ApiOperation(value = "${className}通过id查询")
+    @GetMapping("/select/{id}")
+    public ${className}Entity getById(@PathVariable("id") Integer id) {
+        return ${lowerCaseClassName}Service.getById(id);
+    }
+
+    //查询所有
+    @ApiOperation(value = "${className}查询所有")
+    @GetMapping("/selectAll")
+    public List<${className}Entity> getAll() {
+        return ${lowerCaseClassName}Service.list();
+    }
+
+    //修改
+    @ApiOperation(value = "${className}修改")
+    @PostMapping("/update")
+    public boolean update(@RequestBody ${className}Entity ${lowerCaseClassName}entity) {
+        return ${lowerCaseClassName}Service.updateById(${lowerCaseClassName}entity);
+    }
+
+    //删除
+    @ApiOperation(value = "${className}通过id删除")
+    @DeleteMapping("/delete/{id}")
+    public boolean deleteById(@PathVariable("id") Integer id) {
+        return ${lowerCaseClassName}Service.removeById(id);
+    }
+
+    //删除全部表示数据
+    @ApiOperation(value = "${className}删除全部")
+    @DeleteMapping("/deleteAll")
+    public boolean deleteAll() {
+        return ${lowerCaseClassName}Service.remove(null);
+    }
+}
