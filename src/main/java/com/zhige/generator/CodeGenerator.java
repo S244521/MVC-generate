@@ -1,5 +1,6 @@
 package com.zhige.generator;
 
+import com.zhige.generator.config.GeneratorConfig;
 import com.zhige.generator.model.TableInfo;
 import com.zhige.generator.template.TemplateInitlalizer;
 import com.zhige.generator.template.TemplateUtil;
@@ -16,11 +17,53 @@ import static java.lang.Class.forName;
 
 public class CodeGenerator {
     public static void main(String[] args) {
+        CodeGenerator codeGenerator = new CodeGenerator();
+        codeGenerator.generateCodeDataBase();// 一键生成数据库所有的表的代码
+
+//        codeGenerator.generateCodeTable("user");// 生成指定表的代码
+    }
+
+
+    /**
+     * 根据数据库的查询一键生成数据库所有的表的代码
+     */
+    public void generateCodeDataBase() {
+        Connection connection = null;
+        List<String> fields = new ArrayList<>();
+        try {
+            // 1.数据库连接
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            connection = DriverManager.getConnection(GeneratorConfig.URL, GeneratorConfig.USERNAME, GeneratorConfig.PASSWORD);
+            // 获取数据库元数据
+            Statement statement = connection.createStatement();
+
+            // 获取数据库所有的表名
+            ResultSet resultSet = statement.executeQuery("SHOW TABLES");
+
+            while (resultSet.next()) {
+                // MySQL中SHOW TABLES的结果列名可能是"Tables_in_数据库名"，直接取第一列即可
+                String tableName = resultSet.getString(1);
+                generateCodeTable(tableName);
+            }
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    /**
+     * 生成指定表的代码
+     */
+    public void generateCodeTable(String tableName) {
         // 初始化Velocity引擎
         TemplateInitlalizer.init();
 
         // 从数据库获取表信息并生成代码（可以循环遍历所有表）
-        TableInfo tableInfo = createTableInfoFromDatabase("tab");
+        TableInfo tableInfo = createTableInfoFromDatabase(tableName);
 
         // 准备模板上下文
         VelocityContext context = TemplateUtil.prepareContext(tableInfo);
@@ -40,12 +83,13 @@ public class CodeGenerator {
         }
     }
 
+
+    /**
+     * 从数据库中获取表信息
+     */
     private static TableInfo createTableInfoFromDatabase(String tableName) {
         List<TableInfo.ColumnInfo> columns = new ArrayList<>();
 
-        String url = "jdbc:mysql://localhost:3306/piclibrary";
-        String username = "root";
-        String password = "root";
 
         Connection connection = null;
         List<String> fields = new ArrayList<>();
@@ -53,7 +97,7 @@ public class CodeGenerator {
         try {
             // 1.数据库连接
             Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection(url, username, password);
+            connection = DriverManager.getConnection(GeneratorConfig.URL, GeneratorConfig.USERNAME, GeneratorConfig.PASSWORD);
             // 获取数据库元数据
             Statement statement = connection.createStatement();
 
@@ -72,9 +116,13 @@ public class CodeGenerator {
         } catch (ClassNotFoundException e){
             throw new RuntimeException(e);
         }
-        return new TableInfo(tableName, StringUtils.capitalize(tableName), "packageCode", columns);
+        return new TableInfo(tableName, StringUtils.capitalize(tableName), GeneratorConfig.PACKAGE_NAME, columns);
     }
 
+
+    /**
+     * 根据SQL类型获取Java类型
+     */
     private static String getJavaTypeFromSqlType(int sqlType) {
         switch (sqlType) {
             case Types.INTEGER:// int
